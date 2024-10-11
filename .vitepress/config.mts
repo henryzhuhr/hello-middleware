@@ -12,6 +12,16 @@ const sidebar: DefaultTheme.Sidebar = [
       { text: '安装', link: '/install' },
     ]
   },
+  {
+    collapsed: false,
+    text: 'MySQL',
+    base: '/mysql/',
+    items: [
+      { text: 'MySQL的数据类型', link: 'mysql-data-type' },
+      { text: 'MySQL的SQL', link: 'mysql-sql' },
+      { text: 'MySQL的索引', link: 'mysql-index' },
+    ]
+  },
 ]
 
 /**
