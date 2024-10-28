@@ -1,9 +1,13 @@
-FROM ubuntu:latest
+FROM ubuntu:24.04
 
+ARG MIRRORS_URL="mirrors.tuna.tsinghua.edu.cn"
 ARG MIRRORS_URL="mirrors.ustc.edu.cn"
 ENV DEBIAN_FRONTEND=noninteractive
-RUN sed -i 's/#force_color_prompt=yes/force_color_prompt=yes/g' ${HOME}/.bashrc
-RUN sed -i -e "s#//.*archive.ubuntu.com#//${MIRRORS_URL}#g" -e "s#//ports.ubuntu.com#//${MIRRORS_URL}#g" /etc/apt/sources.list.d/ubuntu.sources && \
+RUN set -x && \
+    sed -i 's/#force_color_prompt=yes/force_color_prompt=yes/g' ${HOME}/.bashrc && \
+    # 修改 apt 源 使用 HTTPS 可以有效避免国内运营商的缓存劫持，但需要事先安装 apt-transport-https。
+    # sed -i 's/http:/https:/g' /etc/apt/sources.list.d/ubuntu.sources && \
+    sed -i -e "s#//.*archive.ubuntu.com#//${MIRRORS_URL}#g" -e "s#//ports.ubuntu.com#//${MIRRORS_URL}#g" /etc/apt/sources.list.d/ubuntu.sources && \
     apt-get update && apt-get upgrade -y && \
     apt-get install -y \
     ca-certificates locales \

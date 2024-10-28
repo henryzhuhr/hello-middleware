@@ -18,6 +18,7 @@ services:
       PG_CONNECTION_URL: postgresql://postgres:mysecretpassword@postgres_db:5432/mydatabase
     volumes:
       - .:/root/hello-database
+      - ~/.ssh:/root/.ssh # 挂载宿主机 ssh 配置文件
     working_dir: /root/hello-database
     # sleep infinity 用于保持容器运行，否则 vscode 无法进入容器，建议写在 .devcontainer/docker-compose.yml 文件中
     command: ["sleep", 'infinity']
