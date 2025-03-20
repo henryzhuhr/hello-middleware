@@ -57,6 +57,11 @@ psql -h postgres_db -U postgres -d postgres
 select * from users;
 \q
 ```
+### 连接 Redis
+
+```shell
+redis-cli -h redis-server
+```
 
 ## GORM
 
