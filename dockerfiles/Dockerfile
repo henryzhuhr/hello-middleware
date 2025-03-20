@@ -130,7 +130,7 @@ RUN set -x && \
     uv venv $VIRTUAL_ENV && \
     echo "source ${VIRTUAL_ENV}/bin/activate" >> $USER_HOME/.bashrc && \
     VENV_PYTHON=${VIRTUAL_ENV}/bin/python3 && \
-    [ -f $USER_HOME/tmp/pyproject.toml ] && uv sync --directory $USER_HOME/tmp || \
+    [ -f $USER_HOME/tmp/pyproject.toml ] && uv sync --active --directory $USER_HOME/tmp || \
     ([ -f $USER_HOME/tmp/requirements.txt ] && uv add --active -r ${USER_HOME}/tmp/requirements.txt) && \
     rm -rf $(uv cache dir) && \
     rm -rf $USER_HOME/tmp && \

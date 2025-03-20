@@ -5,14 +5,14 @@ description = "A project to learn how to use middleware such as MySQL, Redis and
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "elasticsearch>=8.17.2",
-    "etcd3>=0.12.0",
+    # "elasticsearch>=8.17.2",
+    # "etcd3>=0.12.0",
     "fastapi>=0.115.11",
-    "mysql-connector-python>=9.2.0",
-    "protobuf==3.20",
-    "pymilvus==2.5.4",
+    # "mysql-connector-python>=9.2.0",
+    # "protobuf==3.20",
+    # "pymilvus==2.5.4",
     "pyyaml>=6.0.2", # milvus: 建议安装与所安装 Milvus 服务器版本相匹配的 PyMilvus 版本。更多信息，请参阅[发行说明](https://milvus.io/docs/zh/release_notes.md)。
-    "redis>=5.2.1",
+    # "redis>=5.2.1",
     "uvicorn>=0.34.0",
 ]
 
