@@ -1,0 +1,64 @@
+services:
+  # MySQL
+  mysql-server:
+    image: mysql:9 # https://hub.docker.com/_/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret_password}
+      MYSQL_DATABASE: default_db
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: my_secret_password
+      TZ: Asia/Shanghai # 设置时区
+    ports:
+      - "3306:3306"
+    networks:
+      - default
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # - ./sql/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql  # 初始化数据库脚本
+      # - ./sql/mysql/sql:/opt/sql  # 初始化数据库脚本
+
+  # Redis
+  redis-server:
+    image: redis:7 # https://hub.docker.com/_/redis
+    ports:
+      - "6379:6379"
+    networks:
+      - default
+
+  # Etcd
+  etcd-server:
+    image: bitnami/etcd:latest
+    ports:
+      - "2379:2379" # 2379 用于客户端与 etcd 通信
+      - "2380:2380" # 2380 用于 etcd 节点之间的通信
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes # 允许无认证访问 etcd，适用于开发和测试环境。在生产环境中，建议配置认证机制
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379 # 指定 etcd 向客户端公开的 URL，这里使用了服务名 etcd，以便在 Docker 网络中进行通信
+    networks:
+      - default
+    # volumes:
+    #   - /path/to/etcd-data:/bitnami/etcd/data # 挂载本地的 /path/to/etcd-data 目录 数据持久化
+
+  # Elasticsearch
+  elasticsearch-server:
+    image: bitnami/elasticsearch:8.17.1 # https://hub.docker.com/r/bitnami/elasticsearch
+    environment:
+      - discovery.type=single-node
+    networks:
+      - default
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      
+# -- 网络名称，用于容器间通信
+networks:
+  default:
+    name: hello-middleware-network
+
+# -- 数据卷名称，用于持久化数据
+volumes:
+  mysql_data:
+  elasticsearch_data:

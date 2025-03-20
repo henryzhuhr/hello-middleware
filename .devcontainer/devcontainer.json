@@ -6,17 +6,18 @@
 	// Update the 'dockerComposeFile' list if you have more compose files or use different names.
 	// The .devcontainer/docker-compose.yml file contains any overrides you need/want to make.
 	"dockerComposeFile": [
-		"../docker-compose.yml",
-		"docker-compose.yml"
+		// "../docker-compose.milvus.yml", // Milvus
+		"../docker-compose.middlewares.yml", // middlewares
+		"../docker-compose.yml"
 	],
 
 	// The 'service' property is the name of the service for the container that VS Code should
 	// use. Update this value and .devcontainer/docker-compose.yml to the real service name.
-	"service": "hello-databse-dev",
+	"service": "hello-middleware",
 
 	// The optional 'workspaceFolder' property is the path VS Code should open by default when
 	// connected. This is typically a file mount in .devcontainer/docker-compose.yml
-	"workspaceFolder": "/root/${localWorkspaceFolderBasename}",
+	"workspaceFolder": "/root/hello-middleware",
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -37,17 +38,25 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
 				"MS-CEINTL.vscode-language-pack-zh-hans",
 				"PKief.material-icon-theme",
 				"yzhang.markdown-all-in-one",
 				"bierner.markdown-preview-github-styles",
+				"bierner.markdown-mermaid",
 				"mhutchie.git-graph",
 				"waderyan.gitblame",
 				"ms-vscode-remote.remote-containers",
 				"ms-azuretools.vscode-docker",
 				"golang.Go",
 				"xiaoxin-technology.goctl",
-				"inferrinizzard.prettier-sql-vscode"
+				"inferrinizzard.prettier-sql-vscode",
+				"ms-python.vscode-pylance",
+				"ms-python.python",
+				"ms-python.debugpy",
+				"charliermarsh.ruff",
+				"tamasfe.even-better-toml"
 			]
 		}
 	}

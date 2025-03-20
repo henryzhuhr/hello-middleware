@@ -1,15 +1,22 @@
 services:
-  hello-databse-dev:
+  hello-middleware:
     build:
       context: .
       dockerfile: dockerfiles/Dockerfile
-    image: hello-databse-ubuntu-dev:latest  # 构建后镜像的名称和标签
+    image: hello-middleware:latest  # 构建后镜像的名称和标签
+    restart: unless-stopped # 重启策略
     networks:
-      - hello-sql-network
+      - default
     depends_on:
-      - mysql_db
-      - postgres_db
+      - mysql-server
+      - redis-server
     environment:
+      # -- mysql
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret_password}
+      MYSQL_DATABASE: default_db
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: my_secret_password
+      # -- postgres
       PGUSER: postgres # PostgreSQL 用户名
       PGPASSWORD: mysecretpassword # PostgreSQL 用户密码
       PGDATABASE: mydatabase # 初始化数据库名称
@@ -17,61 +24,15 @@ services:
       PGPORT: 5432
       PG_CONNECTION_URL: postgresql://postgres:mysecretpassword@postgres_db:5432/mydatabase
     volumes:
-      - .:/root/hello-database
-      - ~/.ssh:/root/.ssh # 挂载宿主机 ssh 配置文件
-    working_dir: /root/hello-database
+      - .:/root/hello-middleware
+      - "~/.ssh:/root/.ssh:ro" # 挂载宿主机的ssh配置文件，方便推拉代码（只读）
+      - "/etc/localtime:/etc/localtime:ro" # 挂载宿主机时间到容器
+    working_dir: /root/hello-middleware
     # sleep infinity 用于保持容器运行，否则 vscode 无法进入容器，建议写在 .devcontainer/docker-compose.yml 文件中
     command: ["sleep", 'infinity']
-  
-  mysql_db:
-    # build:
-    #   context: .
-    #   dockerfile: dockerfiles/mysql.dockerfile
-    # image: hello-databse-mysql:latest  # 构建后镜像的名称和标签
-    image: mysql:lts  # 构建后镜像的名称和标签
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: mysecretpassword
-      MYSQL_PASSWORD: mysecretpassword
-      MYSQL_DATABASE: mydb
-      # MYSQL_USER: mysql
-      TZ: Asia/Shanghai # 设置时区
-    networks:
-      - hello-sql-network
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./sql/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql  # 初始化数据库脚本
-      - ./sql/mysql/sql:/opt/sql  # 初始化数据库脚本
-    ports:
-      - "3306:3306" # 暴露端口供外部连接
 
-  postgres_db:  # 服务名称
-    build:
-      context: .
-      dockerfile: dockerfiles/postgresql.dockerfile
-    image: hello-databse-postgresql:latest  # 构建后镜像的名称和标签
-    restart: always
-    environment:
-      POSTGRES_USER: postgres # PostgreSQL 用户名
-      POSTGRES_PASSWORD: mysecretpassword # PostgreSQL 用户密码
-      POSTGRES_DB: mydatabase # 初始化数据库名称
-    networks:
-      - hello-sql-network  # 网络名称   
-    volumes:
-      - pg_data:/var/lib/postgresql/data  # 数据卷，用于持久化数据
-      # - /my/custom:/etc/mysql/conf.d  # 挂载配置文件
-    ports:
-      - "5432:5432"
-  
-  
-    
 
 networks:
-  hello-sql-network:
-  
-volumes:
-  # 数据卷名称
-  mysql_data: 
-  pg_data:  
-  
+  default:
+    name: hello-middleware-network
   
