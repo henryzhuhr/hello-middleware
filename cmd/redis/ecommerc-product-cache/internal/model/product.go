@@ -1,3 +1,4 @@
+// 可以参考 https://github.com/8treenet/gcache
 package model
 
 import (
