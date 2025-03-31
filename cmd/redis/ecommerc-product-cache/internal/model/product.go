@@ -4,6 +4,7 @@ package model
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -80,7 +81,7 @@ func (i *ProductRepositoryImpl) CreateProductWithCache(product *Product) (string
 		return "", err
 	}
 	// 将商品信息存储到 Redis 中，设置过期时间为 1 小时
-	err = i.rdb.Set(context.Background(), product.ID, productJson, 0).Err()
+	err = i.rdb.Set(context.Background(), product.ID, productJson, 1*time.Hour).Err()
 	if err != nil {
 		return "", err
 	}
@@ -109,9 +110,9 @@ func (i *ProductRepositoryImpl) FindProductByID(id string) (*Product, error) {
 		} else {
 			var product Product
 			// 反序列化 Redis 中的商品信息
-			errJson := json.Unmarshal([]byte(val), &product)
-			if errJson != nil {
-				log.Errorf("Error unmarshalling product from Redis: %v", errJson)
+			jsonErr := json.Unmarshal([]byte(val), &product)
+			if jsonErr != nil {
+				log.Errorf("Error unmarshalling product from Redis: %v", jsonErr)
 			} else {
 				return &product, nil
 			}

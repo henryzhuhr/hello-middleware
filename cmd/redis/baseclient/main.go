@@ -20,7 +20,9 @@ func main() {
 		return
 	}
 
-	// Set a key with a value
+	// Set a key with a value.
+	// Every Redis command accepts a context that you can use to set timeouts 
+	// or propagate some information, for example, tracing context.
 	ctx := context.Background()
 
 	uid := uuid.New().String()
