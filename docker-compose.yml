@@ -13,6 +13,8 @@ services:
       MYSQL_DATABASE: default_db
       MYSQL_USER: myuser
       MYSQL_PASSWORD: my_secret_password
+      # -- kafka
+      KAFKA_BROKER_HOST: kafka-server # Kafka 服务名称
     volumes:
       - .:/root/hello-middleware
       - "~/.ssh:/root/.ssh:ro" # 挂载宿主机的ssh配置文件，方便推拉代码（只读）
