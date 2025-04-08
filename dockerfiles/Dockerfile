@@ -36,9 +36,9 @@ ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST postgresql-client"
 ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST mysql-client"
 
 
-# 自定义镜像源 (tuna 在自定义网络下不可访问)
-# ARG MIRRORS_URL="mirrors.tuna.tsinghua.edu.cn"
-ARG MIRRORS_URL="mirrors.ustc.edu.cn"
+# 自定义镜像源
+# ARG MIRRORS_URL="mirrors.ustc.edu.cn"
+ARG MIRRORS_URL="mirrors.tencentyun.com"
 ENV DEBIAN_FRONTEND=noninteractive
 
 # set -x 选项会使得每个命令在执行前都会被打印出来，报错时会显示是哪个命令出错
@@ -128,10 +128,15 @@ ENV UV_DEFAULT_INDEX="https://mirrors.cloud.tencent.com/pypi/simple/"
 # ENV UV_INDEX="https://mirrors.ustc.edu.cn/pypi/simple"
 RUN set -x && \
     uv venv $VIRTUAL_ENV && \
-    echo "source ${VIRTUAL_ENV}/bin/activate" >> $USER_HOME/.bashrc && \
+    echo "source ${VIRTUAL_ENV}/bin/activate" >> $USER_HOME/.zshrc && \
     VENV_PYTHON=${VIRTUAL_ENV}/bin/python3 && \
-    [ -f $USER_HOME/tmp/pyproject.toml ] && uv sync --active --directory $USER_HOME/tmp || \
-    ([ -f $USER_HOME/tmp/requirements.txt ] && uv add --active -r ${USER_HOME}/tmp/requirements.txt) && \
+    # [ -f $USER_HOME/tmp/pyproject.toml ] && uv sync --active --directory $USER_HOME/tmp || \
+    # ([ -f $USER_HOME/tmp/requirements.txt ] && uv add --active -r ${USER_HOME}/tmp/requirements.txt) && \
+    if [ -f "$USER_HOME/tmp/pyproject.toml" ]; then \
+        uv sync --active --directory $USER_HOME/tmp; \
+    elif [ -f "$USER_HOME/tmp/requirements.txt" ]; then \
+        uv add --active -r $USER_HOME/tmp/requirements.txt; \
+    fi && \
     rm -rf $(uv cache dir) && \
     rm -rf $USER_HOME/tmp && \
     # 在 uv 没有支持全局变量前，临时加入 history 文件
