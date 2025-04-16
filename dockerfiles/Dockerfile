@@ -37,8 +37,8 @@ ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST mysql-client"
 
 
 # 自定义镜像源
-# ARG MIRRORS_URL="mirrors.ustc.edu.cn"
-ARG MIRRORS_URL="mirrors.tencentyun.com"
+ARG MIRRORS_URL="mirrors.ustc.edu.cn"
+# ARG MIRRORS_URL="mirrors.tencentyun.com"
 ENV DEBIAN_FRONTEND=noninteractive
 
 # set -x 选项会使得每个命令在执行前都会被打印出来，报错时会显示是哪个命令出错

@@ -1,0 +1,20 @@
+services:
+  # Mongo Cluster
+  mongo-cluster:
+    image: mongo:8 # https://hub.docker.com/_/mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    networks:
+      - default
+    volumes:
+      - mongo_data:/data/db # 数据持久化
+      
+# -- 网络名称，用于容器间通信
+networks:
+  default:
+    name: hello-middleware-network
+
+# -- 数据卷名称，用于持久化数据
+volumes:
+  mongo_data:

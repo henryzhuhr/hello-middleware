@@ -1,0 +1,22 @@
+services:
+  # Elasticsearch
+  elasticsearch-server:
+    image: bitnami/elasticsearch:8.17.1 # https://hub.docker.com/r/bitnami/elasticsearch
+    environment:
+      - discovery.type=single-node
+    networks:
+      - default
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      
+# -- 网络名称，用于容器间通信
+networks:
+  default:
+    name: hello-middleware-network
+
+# -- 数据卷名称，用于持久化数据
+volumes:
+  elasticsearch_data:

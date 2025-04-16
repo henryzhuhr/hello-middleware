@@ -6,9 +6,14 @@
 	// Update the 'dockerComposeFile' list if you have more compose files or use different names.
 	// The .devcontainer/docker-compose.yml file contains any overrides you need/want to make.
 	"dockerComposeFile": [
-		// "../docker-compose.milvus.yml", // Milvus
-		"../docker-compose.middlewares.yml", // middlewares
-		"../docker-compose.yml"
+		"../docker-compose.yml",
+		"../dockerfiles/docker-compose.es.yml", // middlesewares
+		"../dockerfiles/docker-compose.etcd.yml", // etcd
+		// "../dockerfiles/docker-compose.milvus.yml", // milvus
+		"../dockerfiles/docker-compose.mongo.yml", // mongo
+		"../dockerfiles/docker-compose.mysql.yml", // mysql
+		"../dockerfiles/docker-compose.redis.yml" // redis
+		
 	],
 
 	// The 'service' property is the name of the service for the container that VS Code should
