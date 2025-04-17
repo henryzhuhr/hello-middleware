@@ -7,22 +7,12 @@ services:
     restart: unless-stopped # 重启策略
     networks:
       - default
-    depends_on:
-      - mysql-server
-      - redis-server
     environment:
       # -- mysql
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret_password}
       MYSQL_DATABASE: default_db
       MYSQL_USER: myuser
       MYSQL_PASSWORD: my_secret_password
-      # -- postgres
-      PGUSER: postgres # PostgreSQL 用户名
-      PGPASSWORD: mysecretpassword # PostgreSQL 用户密码
-      PGDATABASE: mydatabase # 初始化数据库名称
-      PGHOST: postgres_db # PostgreSQL 服务名称
-      PGPORT: 5432
-      PG_CONNECTION_URL: postgresql://postgres:mysecretpassword@postgres_db:5432/mydatabase
     volumes:
       - .:/root/hello-middleware
       - "~/.ssh:/root/.ssh:ro" # 挂载宿主机的ssh配置文件，方便推拉代码（只读）

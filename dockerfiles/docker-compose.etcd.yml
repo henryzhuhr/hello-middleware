@@ -8,16 +8,5 @@ services:
     environment:
       - ALLOW_NONE_AUTHENTICATION=yes # 允许无认证访问 etcd，适用于开发和测试环境。在生产环境中，建议配置认证机制
       - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379 # 指定 etcd 向客户端公开的 URL，这里使用了服务名 etcd，以便在 Docker 网络中进行通信
-    networks:
-      - default
     # volumes:
     #   - /path/to/etcd-data:/bitnami/etcd/data # 挂载本地的 /path/to/etcd-data 目录 数据持久化
-
-  
-# -- 网络名称，用于容器间通信
-networks:
-  default:
-    name: hello-middleware-network
-
-# -- 数据卷名称，用于持久化数据
-volumes:

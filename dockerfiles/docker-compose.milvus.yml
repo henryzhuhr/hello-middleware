@@ -34,8 +34,6 @@ services:
       - ETCD_AUTO_COMPACTION_RETENTION=1000
       - ETCD_QUOTA_BACKEND_BYTES=4294967296
       - ETCD_SNAPSHOT_COUNT=50000
-    networks:
-      - default
     volumes:
       - milvus_etcd_data:/etcd
     command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
@@ -57,8 +55,6 @@ services:
     volumes:
       - milvus_minio_data:/minio_data
     command: minio server /minio_data --console-address ":9001"
-    networks:
-      - default
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -74,17 +70,7 @@ services:
       - "8000:3000" # 访问地址 http://localhost:8000
     depends_on:
       - "milvus-standalone"
-    networks:
-      - default
 
-      
-# -- 网络名称，用于容器间通信
-networks:
-  default:
-    name: hello-middleware-network
-  
-
-# -- 数据卷名称，用于持久化数据
 volumes:
   milvus_data:  # 添加Milvus的数据卷
   milvus_etcd_data:  # 添加Milvus的Etcd数据卷
