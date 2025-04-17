@@ -26,6 +26,15 @@ wheels = [
 ]
 
 [[package]]
+name = "certifi"
+version = "2025.1.31"
+source = { registry = "https://mirrors.cloud.tencent.com/pypi/simple/" }
+sdist = { url = "https://mirrors.cloud.tencent.com/pypi/packages/1c/ab/c9f1e32b7b1bf505bf26f0ef697775960db7932abeb7b516de930ba2705f/certifi-2025.1.31.tar.gz", hash = "sha256:3d5da6925056f6f18f119200434a4780a94263f10d1c21d032a6f6b2baa20651" }
+wheels = [
+    { url = "https://mirrors.cloud.tencent.com/pypi/packages/38/fc/bce832fd4fd99766c04d1ee0eead6b0ec6486fb100ae5e74c1d91292b982/certifi-2025.1.31-py3-none-any.whl", hash = "sha256:ca78db4565a652026a4db2bcdf68f2fb589ea80d0be70e03929ed730746b84fe" },
+]
+
+[[package]]
 name = "click"
 version = "8.1.8"
 source = { registry = "https://mirrors.cloud.tencent.com/pypi/simple/" }
@@ -76,6 +85,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "loguru" },
+    { name = "pulsar-client" },
     { name = "pyyaml" },
     { name = "uvicorn" },
 ]
@@ -84,6 +94,7 @@ dependencies = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115.11" },
     { name = "loguru", specifier = ">=0.7.3" },
+    { name = "pulsar-client", specifier = ">=3.6.1" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "uvicorn", specifier = ">=0.34.0" },
 ]
@@ -108,6 +119,28 @@ dependencies = [
 sdist = { url = "https://mirrors.cloud.tencent.com/pypi/packages/3a/05/a1dae3dffd1116099471c643b8924f5aa6524411dc6c63fdae648c4f1aca/loguru-0.7.3.tar.gz", hash = "sha256:19480589e77d47b8d85b2c827ad95d49bf31b0dcde16593892eb51dd18706eb6" }
 wheels = [
     { url = "https://mirrors.cloud.tencent.com/pypi/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl", hash = "sha256:31a33c10c8e1e10422bfd431aeb5d351c7cf7fa671e3c4df004162264b28220c" },
+]
+
+[[package]]
+name = "pulsar-client"
+version = "3.6.1"
+source = { registry = "https://mirrors.cloud.tencent.com/pypi/simple/" }
+dependencies = [
+    { name = "certifi" },
+]
+wheels = [
+    { url = "https://mirrors.cloud.tencent.com/pypi/packages/e5/d7/266208001e0a1085aebd3a61e665995e205f6ae2ca36fb53f1656ef13b97/pulsar_client-3.6.1-cp312-cp312-macosx_13_0_universal2.whl", hash = "sha256:4c6679715bd8d4b40ae58de79fe01014b1346057d2d4de78aa445f2f4b88373a" },
+    { url = "https://mirrors.cloud.tencent.com/pypi/packages/be/2c/0dca0878a39dbf3dd1e2ce5ca2c198fb61190b5419f5d4abf6e30eeac0a6/pulsar_client-3.6.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6631988fe32d595d4df84c00c9e436d0f6144d73bacafd039bfab492d94cca71" },
+    { url = "https://mirrors.cloud.tencent.com/pypi/packages/5d/d2/b9b8e8987103d6afee5cafff790c9ca8b8b223ba342d582a7bdf1ecc88be/pulsar_client-3.6.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7b2fb7de8bdad1d1105f0784c866efc6da9bc8984f54b6c5bf6192dde1270263" },
+    { url = "https://mirrors.cloud.tencent.com/pypi/packages/d8/07/855ab778820b3b91fb22b81adf38630ab82aa3a650e882f6e163955de9b5/pulsar_client-3.6.1-cp312-cp312-musllinux_1_1_aarch64.whl", hash = "sha256:09790b20a842a8ed4ce8e25ae534050519a82d5a4865b06eb995384c44d6d811" },
+    { url = "https://mirrors.cloud.tencent.com/pypi/packages/8f/b8/fb41a4c67c7ead681dc402a884737b32cd18b6ea6a464f26a0f6ccb00885/pulsar_client-3.6.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:bc07b1289b03eec7034ef48e4e1b24a4758a5f0406ab89f709723b1797169eeb" },
+    { url = "https://mirrors.cloud.tencent.com/pypi/packages/35/56/a088ed4947aefff4ef55548da36af57baa518b211906634fc1288639ab0b/pulsar_client-3.6.1-cp312-cp312-win_amd64.whl", hash = "sha256:ccecfac2a2dc7687632fa39a2c4f9f9804fbfd22bd7291d8097c2ff225d4c635" },
+    { url = "https://mirrors.cloud.tencent.com/pypi/packages/f5/a6/ac4c51a4e341c61b98f89950da7acd546c1c8b3f215c8bdc1933e2c1acc0/pulsar_client-3.6.1-cp313-cp313-macosx_13_0_universal2.whl", hash = "sha256:18f9b8ea01a79f72fa456d326afa7a8894c56298ca21baadd939b155dc35e639" },
+    { url = "https://mirrors.cloud.tencent.com/pypi/packages/45/e3/1e624d2407b5eb979afed28d46abb85d596cd1bc06cde6f13a99ee48190a/pulsar_client-3.6.1-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:56e63beac67ad2cf67eb8f88a3ffbafbd798895975678b8e16fb22092dc670a3" },
+    { url = "https://mirrors.cloud.tencent.com/pypi/packages/51/70/da2ec3c6f3a245f9ff3598290c1d85feadd3b40c4e615a7f5524adf7fd7f/pulsar_client-3.6.1-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d50a6dff558b00dbb9ac859558ac6ac788d4410dc50e660d3dcbf3cf8acf98ef" },
+    { url = "https://mirrors.cloud.tencent.com/pypi/packages/b3/e9/cea42774e830ab5f20d56feb51cbf8e6d6008fc188043b5ee4f50db17121/pulsar_client-3.6.1-cp313-cp313-musllinux_1_1_aarch64.whl", hash = "sha256:4c1aa7df4a1eacf49fa438b83f7999a49cd9cbc2f8768f70b6ba0da8ea6b022b" },
+    { url = "https://mirrors.cloud.tencent.com/pypi/packages/7f/c2/f5841e72ef66511c1421b5fe189dad618c178c475f59ed342953f2a01b91/pulsar_client-3.6.1-cp313-cp313-musllinux_1_1_x86_64.whl", hash = "sha256:3fb09f9fb5510a6dc1b72831dbbf17a4298d8ec25af1f755cdaef3dba469e65d" },
+    { url = "https://mirrors.cloud.tencent.com/pypi/packages/db/e6/9e4cac90b82c6d64ceffea949b7bcac1f512fbbe1976f14b99accef038aa/pulsar_client-3.6.1-cp313-cp313-win_amd64.whl", hash = "sha256:b080192d0d8075b7d010e32aed597e5dcdab6dbbe31662eccb980afe8cb250fb" },
 ]
 
 [[package]]
