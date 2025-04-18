@@ -1,3 +1,4 @@
+// https://redis.uptrace.dev/guide/go-redis.html
 package main
 
 import (
@@ -6,21 +7,16 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/henryzhuhr/hello-middleware/internal/plugin"
 	"github.com/redis/go-redis/v9"
 	log "github.com/sirupsen/logrus"
 )
 
 func main() {
 	flag.Parse()
-
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "redis-server:6379", //"localhost:6379",
-		Password: "",                  // 没有密码，默认值
-		DB:       0,                   // 默认DB 0
-	})
-
-	if err := rdb.Ping(context.Background()).Err(); err != nil {
-		log.Errorf("failed to ping redis, error is %s", err)
+	rdb := plugin.NewRedisClient()
+	if rdb == nil {
+		log.Error("failed to create redis client")
 		return
 	}
 
@@ -50,4 +46,24 @@ func main() {
 	get := rdb.Get(ctx, "abc")
 	log.Infof("val = %s, err = %v", get.Val(), get.Err())
 
+	RedisListDemo(rdb)
+}
+
+// RedisListDemo 列表的使用
+func RedisListDemo(rdb *redis.Client) {
+	// List operations
+	ctx := context.Background()
+
+	// Push values to the list
+	if err := rdb.LPush(ctx, "mylist", "value1", "value2").Err(); err != nil {
+		log.Errorf("failed to lpush, error is %s", err)
+	}
+
+	// Pop a value from the list
+	val, err := rdb.LPop(ctx, "mylist").Result()
+	if err != nil {
+		log.Errorf("failed to lpop, error is %s", err)
+	} else {
+		log.Infof("popped value: %s", val)
+	}
 }

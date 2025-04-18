@@ -12,6 +12,14 @@ const sidebar: DefaultTheme.Sidebar = [
       { text: '安装', link: '/install' },
     ]
   },
+  {
+    collapsed: false,
+    text: 'Redis',
+    base: '/redis/',
+    items: [
+      { text: 'Redis', link: 'mysql-data-type' },
+    ]
+  },
 ]
 
 /**
