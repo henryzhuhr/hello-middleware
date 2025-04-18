@@ -1,8 +1,6 @@
 package main
 
-import (
-	"github.com/henryzhuhr/hello-sql/internal/logger"
-)
+import "github.com/henryzhuhr/hello-middleware/internal/logger"
 
 func main() {
 	// 初始化日志器

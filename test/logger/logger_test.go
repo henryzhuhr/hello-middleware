@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/henryzhuhr/hello-sql/internal/logger"
+	"github.com/henryzhuhr/hello-middleware/internal/logger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
