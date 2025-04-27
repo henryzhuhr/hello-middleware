@@ -66,15 +66,15 @@ services:
   mongodb-sharded-shard-2:
     image: mongo:8.0
     hostname: mongodb-sharded-shard-2
-    # command: mongod --shardsvr --replSet shard1ReplSet --bind_ip_all --port 27020
-    command: sleep infinity # 让容器保持运行状态
+    command: mongod --shardsvr --replSet shard1ReplSet --bind_ip_all --port 27020
+    # command: sleep infinity # 让容器保持运行状态
     volumes:
       - mongodb-sharded-shard-2-data:/data/db
-    # healthcheck:
-    #   test: mongosh --eval "db.runCommand('ping').ok" || exit 1
-    #   interval: 5s
-    #   timeout: 10s
-    #   retries: 5
+    healthcheck:
+      test: mongosh --eval "db.runCommand('ping').ok" || exit 1
+      interval: 5s
+      timeout: 10s
+      retries: 5
 
   # Mongos 路由服务
   mongodb-sharded-mongos:
@@ -84,6 +84,10 @@ services:
       - "27017:27017"
     command: >
       bash -c "
+        echo 'Waiting for config servers to be ready...' &&
+        until mongosh --host mongodb-sharded-config-server-0:27019 --eval 'db.runCommand( { ping: 1 } ).ok' --quiet; do
+          sleep 5;
+        done &&
         echo 'Initializing config server replica set...' &&
         mongosh --host mongodb-sharded-config-server-0:27019 --eval '
           rs.initiate({
@@ -96,17 +100,18 @@ services:
             ]
           })
         ' &&
-        
-        echo '等待配置服务器副本集选举完成... / Waiting for config replica set to elect primary...' &&
+        echo 'Waiting for config replica set to elect primary...' &&
         until mongosh --host mongodb-sharded-config-server-0:27019 --eval 'rs.status().myState === 1' --quiet; do
           sleep 5;
         done &&
-        
+        echo 'Waiting for shard servers to be ready...' &&
+        until mongosh --host mongodb-sharded-shard-0:27020 --eval 'db.runCommand( { ping: 1 } ).ok' --quiet; do
+          sleep 5;
+        done &&
         echo 'Initializing shard replica sets...' &&
         mongosh --host mongodb-sharded-shard-0:27020 --eval '
           rs.initiate({
             _id: \"shard1ReplSet\",
-            configsvr: true,
             members: [
               { _id: 0, host: \"mongodb-sharded-shard-0:27020\" },
               { _id: 1, host: \"mongodb-sharded-shard-1:27020\" },
@@ -114,22 +119,17 @@ services:
             ]
           })
         ' &&
-        
         echo 'Waiting for shard replica set to elect primary...' &&
         until mongosh --host mongodb-sharded-shard-0:27020 --eval 'rs.status().myState === 1' --quiet; do
           sleep 5;
         done &&
-        
         echo 'Starting mongos...' &&
         mongos --configdb configReplSet/mongodb-sharded-config-server-0:27019,mongodb-sharded-config-server-1:27019,mongodb-sharded-config-server-2:27019 --bind_ip_all --port 27017 &
-        
         sleep 5 &&
-        
         echo 'Adding shard to cluster...' &&
         until mongosh --host localhost:27017 --eval 'sh.addShard(\"shard1ReplSet/mongodb-sharded-shard-0:27020\")'; do
           sleep 5;
         done &&
-        
         echo 'MongoDB sharded cluster is ready!' &&
         tail -f /dev/null
       "
