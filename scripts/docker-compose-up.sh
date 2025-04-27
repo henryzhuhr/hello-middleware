@@ -8,4 +8,4 @@ docker compose \
     -f dockerfiles/docker-compose.mysql.yml \
     -f dockerfiles/docker-compose.pulsar-cluster.yml \
     -f dockerfiles/docker-compose.redis.yml \
-    up --build
+    --compatibility up --build

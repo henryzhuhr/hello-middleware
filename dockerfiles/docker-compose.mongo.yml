@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   mongodb-standalone:
     image: mongo:8.0 # https://hub.docker.com/_/mongo
@@ -20,13 +18,14 @@ services:
       interval: 5s
       timeout: 10s
       retries: 5
-    # resources:  # 资源限制
-    #   limits:
-    #     cpus: "1"
-    #     memory: 1024M
-    #   reservations:
-    #     cpus: "0.5"
-    #     memory: 512M
+    deploy:
+      resources:  # 资源限制
+        limits:
+          cpus: "1"
+          memory: 1024M
+        reservations:
+          cpus: "0.5"
+          memory: 512M
 
 volumes:
   mongodb_standalone_data:
