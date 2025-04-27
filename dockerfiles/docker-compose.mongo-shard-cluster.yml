@@ -7,24 +7,26 @@ services:
     hostname: mongodb-sharded-config-server-0
     command: mongod --configsvr --replSet configReplSet --bind_ip_all --port 27019
     volumes:
-      - mongodb-sharded-config-server-1-data:/data/db
+      - mongodb-sharded-config-server-0-data:/data/db
     healthcheck:
-      test: mongosh --eval "db.runCommand('ping').ok" || exit 1
-      interval: 5s
+      test: mongosh --port 27019 --eval "db.runCommand('ping').ok" || exit 1
+      interval: 10s
       timeout: 10s
       retries: 5
+      start_period: 40s # 等待节点启动，给MongoDB更多的启动时间
 
   mongodb-sharded-config-server-1:
     image: mongo:8.0
     hostname: mongodb-sharded-config-server-1
     command: mongod --configsvr --replSet configReplSet --bind_ip_all --port 27019
     volumes:
-      - mongodb-sharded-config-server-2-data:/data/db
+      - mongodb-sharded-config-server-1-data:/data/db
     healthcheck:
-      test: mongosh --eval "db.runCommand('ping').ok" || exit 1
-      interval: 5s
+      test: mongosh --port 27019 --eval "db.runCommand('ping').ok" || exit 1
+      interval: 10s
       timeout: 10s
       retries: 5
+      start_period: 40s
 
   mongodb-sharded-config-server-2:
     image: mongo:8.0
@@ -33,10 +35,11 @@ services:
     volumes:
       - mongodb-sharded-config-server-2-data:/data/db
     healthcheck:
-      test: mongosh --eval "db.runCommand('ping').ok" || exit 1
-      interval: 5s
+      test: mongosh --port 27019 --eval "db.runCommand('ping').ok" || exit 1
+      interval: 10s
       timeout: 10s
       retries: 5
+      start_period: 40s
 
   # Shard (三节点副本集)
   mongodb-sharded-shard-0:
@@ -46,10 +49,11 @@ services:
     volumes:
       - mongodb-sharded-shard-0-data:/data/db
     healthcheck:
-      test: mongosh --eval "db.runCommand('ping').ok" || exit 1
-      interval: 5s
+      test: mongosh --port 27020 --eval "db.runCommand('ping').ok" || exit 1
+      interval: 10s
       timeout: 10s
       retries: 5
+      start_period: 40s
 
   mongodb-sharded-shard-1:
     image: mongo:8.0
@@ -58,23 +62,24 @@ services:
     volumes:
       - mongodb-sharded-shard-1-data:/data/db
     healthcheck:
-      test: mongosh --eval "db.runCommand('ping').ok" || exit 1
-      interval: 5s
+      test: mongosh --port 27020 --eval "db.runCommand('ping').ok" || exit 1
+      interval: 10s
       timeout: 10s
       retries: 5
+      start_period: 40s
 
   mongodb-sharded-shard-2:
     image: mongo:8.0
     hostname: mongodb-sharded-shard-2
     command: mongod --shardsvr --replSet shard1ReplSet --bind_ip_all --port 27020
-    # command: sleep infinity # 让容器保持运行状态
     volumes:
       - mongodb-sharded-shard-2-data:/data/db
     healthcheck:
-      test: mongosh --eval "db.runCommand('ping').ok" || exit 1
-      interval: 5s
+      test: mongosh --port 27020 --eval "db.runCommand('ping').ok" || exit 1
+      interval: 10s
       timeout: 10s
       retries: 5
+      start_period: 40s
 
   # Mongos 路由服务
   mongodb-sharded-mongos:
@@ -133,7 +138,7 @@ services:
         echo 'MongoDB sharded cluster is ready!' &&
         tail -f /dev/null
       "
-    # command: mongos --configdb configReplSet/mongodb-sharded-config-server-0:27017,mongodb-sharded-config-server-1:27017,mongodb-sharded-config-server-2:27017 --bind_ip_all --port 27017
+    # command: mongos --configdb configReplSet/mongodb-sharded-config-server-0:27019,mongodb-sharded-config-server-1:27019,mongodb-sharded-config-server-2:27019 --bind_ip_all --port 27017
     depends_on:
       mongodb-sharded-config-server-0:
         condition: service_healthy
