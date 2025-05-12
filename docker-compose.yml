@@ -9,9 +9,16 @@ services:
     networks:
       - default
     environment:
-      # -- pulsar
-      PULSAR_BROKER_URL: pulsar://pulsar-cluster-broker:6650
-      PULSAR_DEFAULT_TOPIC: persistent://public/default/test-topic
+      # -- mysql
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root_secret_password}
+      - MYSQL_DATABASE=default_db
+      - MYSQL_USER=myuser
+      - MYSQL_PASSWORD=my_secret_password
+      # --mongo
+      - MONGO_HOST=mongodb-standalone   # mongoDB 服务的主机名
+      - MONGO_INITDB_ROOT_USERNAME=root # 初始化数据库的根用户名
+      - MONGO_INITDB_ROOT_PASSWORD=root # 初始化数据库的根密码
+      # - MONGO_INITDB_DATABASE=defaul_db
     volumes:
       - .:/root/app
       - "~/.ssh:/root/.ssh:ro" # 挂载宿主机的ssh配置文件，方便推拉代码（只读）

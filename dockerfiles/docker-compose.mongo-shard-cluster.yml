@@ -1,53 +1,147 @@
 # https://www.mongodb.com/zh-cn/docs/manual/tutorial/deploy-shard-cluster/#std-label-sharding-procedure-setup
 # https://www.cnblogs.com/likingzi/p/16556734.html
-services:
+services:      
   # Config Server (三节点副本集)
   mongodb-sharded-config-server-0:
-    image: mongo:8.0
+    image: mongo:8.0 # https://hub.docker.com/_/mongo
+    # image: bitnami/mongodb:8.0 # https://hub.docker.com/r/bitnami/mongodb
+    # platform: linux/amd64
+    container_name: mongodb-sharded-config-server-0
     hostname: mongodb-sharded-config-server-0
+    networks:
+      - mongodb-sharded-network
     command: mongod --configsvr --replSet configReplSet --bind_ip_all --port 27019
     volumes:
       - mongodb-sharded-config-server-0-data:/data/db
     healthcheck:
-      test: mongosh --port 27019 --eval "db.runCommand('ping').ok" || exit 1
+      test: |
+        bash -c '
+          echo "Checking if the node is healthy and part of a replica set..." &&
+          mongosh --port 27019 --eval "rs.status().myState === 1 || rs.status().myState === 2" --quiet | grep -q "true"
+        ' || exit 1
       interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 40s # 等待节点启动，给MongoDB更多的启动时间
+      timeout: 20s
+      retries: 15
+      start_period: 60s # 等待节点启动，给MongoDB更多的启动时间
 
   mongodb-sharded-config-server-1:
     image: mongo:8.0
+    # image: bitnami/mongodb:8.0
+    # platform: linux/amd64
+    container_name: mongodb-sharded-config-server-1
     hostname: mongodb-sharded-config-server-1
+    networks:
+      - mongodb-sharded-network
     command: mongod --configsvr --replSet configReplSet --bind_ip_all --port 27019
     volumes:
       - mongodb-sharded-config-server-1-data:/data/db
     healthcheck:
-      test: mongosh --port 27019 --eval "db.runCommand('ping').ok" || exit 1
+      test: |
+        bash -c '
+          echo "Checking if the node is healthy and part of a replica set..." &&
+          mongosh --port 27019 --eval "rs.status().myState === 1 || rs.status().myState === 2" --quiet | grep -q "true"
+        ' || exit 1
       interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
+      timeout: 20s
+      retries: 15
+      start_period: 60s
 
   mongodb-sharded-config-server-2:
     image: mongo:8.0
+    # image: bitnami/mongodb:8.0
+    # platform: linux/amd64
+    container_name: mongodb-sharded-config-server-2
     hostname: mongodb-sharded-config-server-2
+    networks:
+      - mongodb-sharded-network
     command: mongod --configsvr --replSet configReplSet --bind_ip_all --port 27019
     volumes:
       - mongodb-sharded-config-server-2-data:/data/db
     healthcheck:
-      test: mongosh --port 27019 --eval "db.runCommand('ping').ok" || exit 1
+      test: |
+        bash -c '
+          echo "Checking if the node is healthy and part of a replica set..." &&
+          mongosh --port 27019 --eval "rs.status().myState === 1 || rs.status().myState === 2" --quiet | grep -q "true"
+        ' || exit 1
       interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
+      timeout: 20s
+      retries: 15
+      start_period: 60s
+
+  # 初始化 config server 副本集
+  init-config-replicaset:
+    image: mongo:8.0
+    container_name: init-config-replicaset
+    hostname: init-config-replicaset
+    networks:
+      - mongodb-sharded-network
+    command: |
+      sh -c "
+        echo 'Waiting for config server to be ready before initialization...' &&
+        MAX_RETRIES=60
+        RETRY_COUNT=0
+        until mongosh --host mongodb-sharded-config-server-0:27019 --eval 'db.runCommand({ ping: 1 })' --quiet | grep -q \"ok.*1\"; do
+          echo 'Config server not ready yet... retrying in 5 seconds.' &&
+          sleep 5 &&
+          if [ \$RETRY_COUNT -ge \$MAX_RETRIES ]; then
+            echo 'Timeout waiting for config server to start.' &&
+            exit 1
+          fi &&
+          RETRY_COUNT=\$((RETRY_COUNT + 1))
+        done &&
+
+        echo 'Checking if replica set is already initialized...' &&
+        INIT_CHECK=\$(mongosh --host mongodb-sharded-config-server-0:27019 --eval 'rs.conf()' --quiet) &&
+        if echo \$INIT_CHECK | grep -q \"_id\"; then
+          echo 'Config server replica set already initialized. Skipping rs.initiate().' &&
+          echo 'Proceeding to wait for primary election...' &&
+          true
+        else
+          echo 'Initializing config server replica set...' &&
+          mongosh --host mongodb-sharded-config-server-0:27019 --eval '
+            rs.initiate({
+              _id: \"configReplSet\",
+              configsvr: true,
+              members: [
+                { _id: 0, host: \"mongodb-sharded-config-server-0:27019\" },
+                { _id: 1, host: \"mongodb-sharded-config-server-1:27019\" },
+                { _id: 2, host: \"mongodb-sharded-config-server-2:27019\" }
+              ]
+            })
+          '
+        fi &&
+
+        echo 'Waiting for primary to be elected...' &&
+        while ! mongosh --host mongodb-sharded-config-server-0:27019 --eval 'rs.status().myState === 1' --quiet | grep -q \"true\"; do
+          echo 'Waiting for primary node...' &&
+          sleep 5;
+        done &&
+
+        echo 'Config server replica set initialized and primary elected.'
+      "
+    depends_on:
+      mongodb-sharded-config-server-0:
+        condition: service_started
+      mongodb-sharded-config-server-1:
+        condition: service_started
+      mongodb-sharded-config-server-2:
+        condition: service_started
 
   # Shard (三节点副本集)
   mongodb-sharded-shard-0:
     image: mongo:8.0
+    # image: bitnami/mongodb:8.0
+    # platform: linux/amd64
+    container_name: mongodb-sharded-shard-0
     hostname: mongodb-sharded-shard-0
+    networks:
+      - mongodb-sharded-network
     command: mongod --shardsvr --replSet shard1ReplSet --bind_ip_all --port 27020
     volumes:
       - mongodb-sharded-shard-0-data:/data/db
+    depends_on:
+      init-config-replicaset:
+        condition: service_completed_successfully
     healthcheck:
       test: mongosh --port 27020 --eval "db.runCommand('ping').ok" || exit 1
       interval: 10s
@@ -57,10 +151,18 @@ services:
 
   mongodb-sharded-shard-1:
     image: mongo:8.0
+    # image: bitnami/mongodb:8.0
+    # platform: linux/amd64
+    container_name: mongodb-sharded-shard-1
     hostname: mongodb-sharded-shard-1
+    networks:
+      - mongodb-sharded-network
     command: mongod --shardsvr --replSet shard1ReplSet --bind_ip_all --port 27020
     volumes:
       - mongodb-sharded-shard-1-data:/data/db
+    depends_on:
+      init-config-replicaset:
+        condition: service_completed_successfully
     healthcheck:
       test: mongosh --port 27020 --eval "db.runCommand('ping').ok" || exit 1
       interval: 10s
@@ -70,10 +172,18 @@ services:
 
   mongodb-sharded-shard-2:
     image: mongo:8.0
+    # image: bitnami/mongodb:8.0
+    # platform: linux/amd64
+    container_name: mongodb-sharded-shard-2
     hostname: mongodb-sharded-shard-2
+    networks:
+      - mongodb-sharded-network
     command: mongod --shardsvr --replSet shard1ReplSet --bind_ip_all --port 27020
     volumes:
       - mongodb-sharded-shard-2-data:/data/db
+    depends_on:
+      init-config-replicaset:
+        condition: service_completed_successfully
     healthcheck:
       test: mongosh --port 27020 --eval "db.runCommand('ping').ok" || exit 1
       interval: 10s
@@ -84,74 +194,36 @@ services:
   # Mongos 路由服务
   mongodb-sharded-mongos:
     image: mongo:8.0
+    # image: bitnami/mongodb:8.0
+    # platform: linux/amd64
+    container_name: mongodb-sharded-mongos
     hostname: mongodb-sharded-mongos
+    networks:
+      - mongodb-sharded-network
     ports:
       - "27017:27017"
     command: >
       bash -c "
-        echo 'Waiting for config servers to be ready...' &&
-        until mongosh --host mongodb-sharded-config-server-0:27019 --eval 'db.runCommand( { ping: 1 } ).ok' --quiet; do
-          sleep 5;
-        done &&
-        echo 'Initializing config server replica set...' &&
-        mongosh --host mongodb-sharded-config-server-0:27019 --eval '
-          rs.initiate({
-            _id: \"configReplSet\",
-            configsvr: true,
-            members: [
-              { _id: 0, host: \"mongodb-sharded-config-server-0:27019\" },
-              { _id: 1, host: \"mongodb-sharded-config-server-1:27019\" },
-              { _id: 2, host: \"mongodb-sharded-config-server-2:27019\" }
-            ]
-          })
-        ' &&
-        echo 'Waiting for config replica set to elect primary...' &&
-        until mongosh --host mongodb-sharded-config-server-0:27019 --eval 'rs.status().myState === 1' --quiet; do
-          sleep 5;
-        done &&
         echo 'Waiting for shard servers to be ready...' &&
         until mongosh --host mongodb-sharded-shard-0:27020 --eval 'db.runCommand( { ping: 1 } ).ok' --quiet; do
           sleep 5;
         done &&
-        echo 'Initializing shard replica sets...' &&
-        mongosh --host mongodb-sharded-shard-0:27020 --eval '
-          rs.initiate({
-            _id: \"shard1ReplSet\",
-            members: [
-              { _id: 0, host: \"mongodb-sharded-shard-0:27020\" },
-              { _id: 1, host: \"mongodb-sharded-shard-1:27020\" },
-              { _id: 2, host: \"mongodb-sharded-shard-2:27020\" }
-            ]
-          })
-        ' &&
         echo 'Waiting for shard replica set to elect primary...' &&
         until mongosh --host mongodb-sharded-shard-0:27020 --eval 'rs.status().myState === 1' --quiet; do
           sleep 5;
         done &&
         echo 'Starting mongos...' &&
-        mongos --configdb configReplSet/mongodb-sharded-config-server-0:27019,mongodb-sharded-config-server-1:27019,mongodb-sharded-config-server-2:27019 --bind_ip_all --port 27017 &
+        mongos --configdb configReplSet/mongodb-sharded-config-server-0:27019,mongodb-sharded-config-server-1:27019,mongodb-sharded-config-server-2:27019 --bind_ip_all --port 27017 &&
         sleep 5 &&
         echo 'Adding shard to cluster...' &&
         until mongosh --host localhost:27017 --eval 'sh.addShard(\"shard1ReplSet/mongodb-sharded-shard-0:27020\")'; do
           sleep 5;
         done &&
-        echo 'MongoDB sharded cluster is ready!' &&
-        tail -f /dev/null
+        echo 'MongoDB sharded cluster is ready!'
       "
-    # command: mongos --configdb configReplSet/mongodb-sharded-config-server-0:27019,mongodb-sharded-config-server-1:27019,mongodb-sharded-config-server-2:27019 --bind_ip_all --port 27017
     depends_on:
-      mongodb-sharded-config-server-0:
-        condition: service_healthy
-      mongodb-sharded-config-server-1:
-        condition: service_healthy
-      mongodb-sharded-config-server-2:
-        condition: service_healthy
-      mongodb-sharded-shard-0:
-        condition: service_healthy
-      mongodb-sharded-shard-1:
-        condition: service_healthy
-      mongodb-sharded-shard-2:
-        condition: service_healthy
+      init-config-replicaset:
+        condition: service_completed_successfully
 
 volumes:
   mongodb-sharded-config-server-0-data:
@@ -160,3 +232,7 @@ volumes:
   mongodb-sharded-shard-0-data:
   mongodb-sharded-shard-1-data:
   mongodb-sharded-shard-2-data:
+
+networks:
+  mongodb-sharded-network:
+    driver: bridge

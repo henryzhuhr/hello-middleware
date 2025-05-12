@@ -1,12 +1,13 @@
 services:
   mongodb-standalone:
     image: mongo:8.0 # https://hub.docker.com/_/mongo
+    hostname: mongodb-standalone
     restart: always
     environment:
       - TZ=Asia/Shanghai
-      - MONGO_INITDB_ROOT_USERNAME=root  # 初始化数据库的根用户名
-      - MONGO_INITDB_ROOT_PASSWORD=root  # 初始化数据库的根密码
-      - MONGO_INITDB_DATABASE=defaul_db
+      - MONGO_INITDB_ROOT_USERNAME=root # 初始化数据库的根用户名
+      - MONGO_INITDB_ROOT_PASSWORD=root # 初始化数据库的根密码
+      # - MONGO_INITDB_DATABASE=defaul_db
       # - MONGODB_EXTRA_FLAGS=--wiredTigerCacheSizeGB=2
       # - MONGODB_SYSTEM_LOG_VERBOSITY=3
     ports:
