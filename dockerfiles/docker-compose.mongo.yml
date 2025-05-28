@@ -7,7 +7,7 @@ services:
       - TZ=Asia/Shanghai
       - MONGO_INITDB_ROOT_USERNAME=root # 初始化数据库的根用户名
       - MONGO_INITDB_ROOT_PASSWORD=root # 初始化数据库的根密码
-      # - MONGO_INITDB_DATABASE=defaul_db
+      - MONGO_INITDB_DATABASE=defaultdb
       # - MONGODB_EXTRA_FLAGS=--wiredTigerCacheSizeGB=2
       # - MONGODB_SYSTEM_LOG_VERBOSITY=3
     ports:
