@@ -1,8 +1,5 @@
 FROM ubuntu:24.04
 
-# 是否清理 apt 缓存
-ARG CLEAN_APT_CACHE=0
-
 # ============================================================
 # 「基础」软件列表 BASE_INSTALL_LIST
 #        - ubuntu-desktop-minimal   桌面环境（会比较大）
@@ -35,11 +32,13 @@ ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST golang"
 ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST postgresql-client"
 ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST mysql-client"
 
-
 # 自定义镜像源
 ARG MIRRORS_URL="mirrors.ustc.edu.cn"
 # ARG MIRRORS_URL="mirrors.tencentyun.com"
 ENV DEBIAN_FRONTEND=noninteractive
+# 是否清理 apt 缓存
+ARG CLEAN_APT_CACHE=0
+
 
 # set -x 选项会使得每个命令在执行前都会被打印出来，报错时会显示是哪个命令出错
 RUN set -x && \
@@ -47,11 +46,9 @@ RUN set -x && \
     sed -i -e "s#//.*archive.ubuntu.com#//${MIRRORS_URL}#g" -e "s#//ports.ubuntu.com#//${MIRRORS_URL}#g" /etc/apt/sources.list.d/ubuntu.sources && \
     apt-get update && \
     apt-get upgrade -y && \
-    # 合并软件列表合并
     INSTALL_LIST="$BASE_INSTALL_LIST $EXTENT_INSTALL_LIST" && \
     apt-get install -y --no-install-recommends ${INSTALL_LIST} && \
     apt-get autoremove -y && \
-    # 非开发模式下清理 apt 缓存
     if [ $CLEAN_APT_CACHE -ne 1 ]; then { apt-get clean all; rm -rf /var/lib/apt/lists/*; } fi && \
     localedef -i zh_CN -c -f UTF-8 -A /usr/share/locale/locale.alias zh_CN.UTF-8 
 
@@ -98,16 +95,16 @@ ARG USER_HOME="/${USER_NAME}"
 # ============================================================
 #   Golang 环境
 # ============================================================
-RUN set -x && \
-    go env -w GO111MODULE=on && \
-    go env -w GOPROXY=https://goproxy.cn,direct && \
-    go install golang.org/x/tools/gopls@latest && \
-    go install github.com/cweill/gotests/...@latest && \
-    go install github.com/fatih/gomodifytags@latest && \
-    go install github.com/josharian/impl@latest && \
-    go install github.com/haya14busa/goplay/cmd/goplay@latest && \
-    go install github.com/go-delve/delve/cmd/dlv@latest && \
-    go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+# RUN set -x && \
+#     go env -w GO111MODULE=on && \
+#     go env -w GOPROXY=https://goproxy.cn,direct && \
+#     go install golang.org/x/tools/gopls@latest && \
+#     go install github.com/cweill/gotests/...@latest && \
+#     go install github.com/fatih/gomodifytags@latest && \
+#     go install github.com/josharian/impl@latest && \
+#     go install github.com/haya14busa/goplay/cmd/goplay@latest && \
+#     go install github.com/go-delve/delve/cmd/dlv@latest && \
+#     go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 
 # ============================================================
@@ -132,11 +129,11 @@ RUN set -x && \
     VENV_PYTHON=${VIRTUAL_ENV}/bin/python3 && \
     # [ -f $USER_HOME/tmp/pyproject.toml ] && uv sync --active --directory $USER_HOME/tmp || \
     # ([ -f $USER_HOME/tmp/requirements.txt ] && uv add --active -r ${USER_HOME}/tmp/requirements.txt) && \
-    if [ -f "$USER_HOME/tmp/pyproject.toml" ]; then \
-        uv sync --active --directory $USER_HOME/tmp; \
-    elif [ -f "$USER_HOME/tmp/requirements.txt" ]; then \
-        uv add --active -r $USER_HOME/tmp/requirements.txt; \
-    fi && \
+    # if [ -f "$USER_HOME/tmp/pyproject.toml" ]; then \
+    #     uv sync --active --directory $USER_HOME/tmp; \
+    # elif [ -f "$USER_HOME/tmp/requirements.txt" ]; then \
+    #     uv add --active -r $USER_HOME/tmp/requirements.txt; \
+    # fi && \
     rm -rf $(uv cache dir) && \
     rm -rf $USER_HOME/tmp && \
     # 在 uv 没有支持全局变量前，临时加入 history 文件

@@ -14,11 +14,10 @@ services:
       MYSQL_USER: myuser
       MYSQL_PASSWORD: my_secret_password
     volumes:
-      - .:/root/hello-middleware
+      - .:/root/app
       - "~/.ssh:/root/.ssh:ro" # 挂载宿主机的ssh配置文件，方便推拉代码（只读）
       - "/etc/localtime:/etc/localtime:ro" # 挂载宿主机时间到容器
-    working_dir: /root/hello-middleware
-    # sleep infinity 用于保持容器运行，否则 vscode 无法进入容器，建议写在 .devcontainer/docker-compose.yml 文件中
+    working_dir: /root/app
     command: ["sleep", 'infinity']
 
 
