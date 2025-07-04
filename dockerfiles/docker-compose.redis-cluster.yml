@@ -1,0 +1,88 @@
+# https://docs.docker.com/reference/compose-file/services/
+services:
+  # ports:
+  #   - "6379" # Standard Redis command port.
+  #   - "16379" # Cluster bus port (cluster-node-timeout uses this).
+  redis-init-job:
+    image: redis:7
+    container_name: redis-init-job
+    networks:
+      - redis-cluster-net
+    depends_on:
+      - redis-leader-0
+      - redis-leader-1
+      - redis-leader-2
+      - redis-follower-0
+      - redis-follower-1
+      - redis-follower-2
+    command: |
+      echo '等待 Redis 节点启动中...'
+      sleep 15
+      echo '正在创建 Redis Cluster...'
+      redis-cli --cluster create \
+        redis-leader-0:6379 redis-leader-1:6379 redis-leader-2:6379 \
+        redis-follower-0:6379 redis-follower-1:6379 redis-follower-2:6379 \
+        --cluster-replicas 1 --yes
+      echo 'Redis Cluster 已初始化完成'
+
+  # 节点 0
+  redis-leader-0:
+    image: redis:7
+    container_name: redis-leader-0
+    networks:
+      - redis-cluster-net
+    command: |
+      redis-server --cluster-enabled yes --appendonly yes --port 6379 --cluster-node-timeout 5000 --cluster-config-file nodes.conf --maxmemory 256mb --maxmemory-policy allkeys-lru
+    
+  redis-follower-0:
+    image: redis:7
+    container_name: redis-follower-0
+    networks:
+      - redis-cluster-net
+    command: |
+      redis-server --replicaof redis-leader-0 6379 --appendonly yes --cluster-config-file nodes.conf --maxmemory 256mb --maxmemory-policy allkeys-lru
+    
+
+  
+  # 节点 1
+  redis-leader-1:
+    image: redis:7
+    container_name: redis-leader-1
+    networks:
+      - redis-cluster-net
+    command: |
+      redis-server --cluster-enabled yes --appendonly yes --port 6379 --cluster-node-timeout 5000 --cluster-config-file nodes.conf --maxmemory 256mb --maxmemory-policy allkeys-lru
+    
+  redis-follower-1:
+    image: redis:7
+    container_name: redis-follower-1
+    networks:
+      - redis-cluster-net
+    command: |
+      redis-server --replicaof redis-leader-1 6379 --appendonly yes --cluster-config-file nodes.conf --maxmemory 256mb --maxmemory-policy allkeys-lru
+    
+
+  
+  # 节点 2
+  redis-leader-2:
+    image: redis:7
+    container_name: redis-leader-2
+    networks:
+      - redis-cluster-net
+    command: |
+      redis-server --cluster-enabled yes --appendonly yes --port 6379 --cluster-node-timeout 5000 --cluster-config-file nodes.conf --maxmemory 256mb --maxmemory-policy allkeys-lru
+    
+  redis-follower-2:
+    image: redis:7
+    container_name: redis-follower-2
+    networks:
+      - redis-cluster-net
+    command: |
+      redis-server --replicaof redis-leader-2 6379 --appendonly yes --cluster-config-file nodes.conf --maxmemory 256mb --maxmemory-policy allkeys-lru
+    
+
+  
+
+networks:
+  redis-cluster-net:
+    driver: bridge
