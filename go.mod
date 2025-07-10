@@ -1,6 +1,6 @@
 module github.com/henryzhuhr/hello-middleware
 
-go 1.22.2
+go 1.24
 
 require github.com/sirupsen/logrus v1.9.3
 

@@ -1,18 +1,17 @@
 services:
   hello-middleware:
-    build:
-      context: .
-      dockerfile: dockerfiles/Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: dockerfiles/Dockerfile
     image: hello-middleware:latest  # 构建后镜像的名称和标签
     restart: unless-stopped # 重启策略
     networks:
       - default
+      - pulsar-cluster # pulsar 集群访问
     environment:
-      # -- mysql
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret_password}
-      MYSQL_DATABASE: default_db
-      MYSQL_USER: myuser
-      MYSQL_PASSWORD: my_secret_password
+      # -- pulsar
+      PULSAR_BROKER_URL: pulsar://pulsar-cluster-broker:6650
+      PULSAR_DEFAULT_TOPIC: persistent://public/default/test-topic
     volumes:
       - .:/root/app
       - "~/.ssh:/root/.ssh:ro" # 挂载宿主机的ssh配置文件，方便推拉代码（只读）
