@@ -1,20 +1,22 @@
 services:
   # see deployment doc: https://pulsar.apache.org/docs/4.0.x/getting-started-docker-compose/
 
-  # pulsar zookeeper
+  # pulsar zookeeper: 管理集群元数据和协调分布式服务
   pulsar-cluster-zookeeper:
-    image: apachepulsar/pulsar:4.0.3 # https://hub.docker.com/r/apachepulsar/pulsar
+    image: apachepulsar/pulsar:4.0.0 # https://hub.docker.com/r/apachepulsar/pulsar
     restart: on-failure
     networks:
       - pulsar-cluster
-    volumes:
-      # 暂时无法挂载数据卷，因为权限问题：
-      #   具体来说，pulsar_cluster_standalone_zookeeper_data 由宿主机创建，
-      #   但是启动的时候会尝试创建 /pulsar/data/zookeeper/verison-2 因为没有权限失败
-      # - pulsar_cluster_standalone_zookeeper_data:/pulsar/data/zookeeper
-      - ./persist/pulsar/data/zookeeper:/pulsar/data/zookeeper
+    # volumes:
+    #   # 暂时无法挂载数据卷，因为权限问题：
+    #   #   具体来说，pulsar_cluster_standalone_zookeeper_data 由宿主机创建，
+    #   #   但是启动的时候会尝试创建 /pulsar/data/zookeeper/verison-2 因为没有权限失败
+    #   # - pulsar_cluster_standalone_zookeeper_data:/pulsar/data/zookeeper
+    #   - ./persist/pulsar/data/zookeeper:/pulsar/data/zookeeper
     environment:
+      # 指定元数据存储地址为当前 ZooKeeper 服务
       - metadataStoreUrl=zk:pulsar-cluster-zookeeper:2181
+      # 限制 JVM 内存为 256MB
       - PULSAR_MEM=-Xms256m -Xmx256m -XX:MaxDirectMemorySize=256m
     command: |
       bash -c "bin/apply-config-from-env.py conf/zookeeper.conf && \
@@ -26,10 +28,10 @@ services:
       timeout: 5s
       retries: 30
   
-  # Init cluster metadata
+  # Init cluster metadata: 在 ZooKeeper 中初始化 Pulsar 集群的元数据
   pulsar-cluster-init:
     hostname: pulsar-init
-    image: apachepulsar/pulsar:4.0.3
+    image: apachepulsar/pulsar:4.0.0
     networks:
       - pulsar-cluster
     command: >
@@ -45,17 +47,21 @@ services:
 
   # pulsar bookie
   pulsar-cluster-bookie:
-    image: apachepulsar/pulsar:4.0.3
+    image: apachepulsar/pulsar:4.0.0
     restart: on-failure
     networks:
       - pulsar-cluster
     environment:
+      # 集群名称，需要与初始化时一致
       - clusterName=cluster-a
+      # 指向 ZooKeeper 服务
       - zkServers=pulsar-cluster-zookeeper:2181
+      # 设置为容器名称（pulsar-cluster-bookie），避免因 IP 变化导致 Cookie 校验失败
       - metadataServiceUri=metadata-store:zk:pulsar-cluster-zookeeper:2181
       # otherwise every time we run docker compose uo or down we fail to start due to Cookie
       # See: https://github.com/apache/bookkeeper/blob/405e72acf42bb1104296447ea8840d805094c787/bookkeeper-server/src/main/java/org/apache/bookkeeper/bookie/Cookie.java#L57-68
       - advertisedAddress=pulsar-cluster-bookie
+      # 分配 512MB 内存
       - BOOKIE_MEM=-Xms512m -Xmx512m -XX:MaxDirectMemorySize=256m
     depends_on:
       pulsar-cluster-zookeeper:
@@ -63,43 +69,48 @@ services:
       pulsar-cluster-init:
         condition: service_completed_successfully
     # Map the local directory to the container to avoid bookie startup failure due to insufficient container disks.
-    volumes:
-      - ./persist/pulsar/data/bookkeeper:/pulsar/data/bookkeeper
+    # volumes:
+    #   - ./persist/pulsar/data/bookkeeper:/pulsar/data/bookkeeper
     command: bash -c "bin/apply-config-from-env.py conf/bookkeeper.conf && exec bin/pulsar bookie"
 
-  # Start broker
+  # Start broker: 代理服务，处理客户端请求，管理 Topic 和消息分发
   pulsar-cluster-broker:
-    image: apachepulsar/pulsar:4.0.3
+    image: apachepulsar/pulsar:4.0.0
     hostname: broker
     restart: on-failure
     networks:
       - pulsar-cluster
     environment:
+      # 指定元数据存储地址为 ZooKeeper
       - metadataStoreUrl=zk:pulsar-cluster-zookeeper:2181
+      # ZooKeeper 服务地址，用于旧版兼容性配置（部分组件仍依赖此参数）。
       - zookeeperServers=pulsar-cluster-zookeeper:2181
+      # 集群名称，需要与初始化时一致
       - clusterName=cluster-a
+      # 副本策略：BookKeeper 分片的副本组大小
       - managedLedgerDefaultEnsembleSize=1
+      # 副本策略：每个分片的写副本数
       - managedLedgerDefaultWriteQuorum=1
+      # 副本策略：每个分片的确认副本数
       - managedLedgerDefaultAckQuorum=1
+      # Broker 对外宣称的网络地址
       - advertisedAddress=pulsar-cluster-broker
+      # 客户端连接 Broker 的协议和地址
       - advertisedListeners=external:pulsar://pulsar-cluster-broker:6650
+      # JVM 内存配置（堆内存 512MB，直接内存 256MB）
       - PULSAR_MEM=-Xms512m -Xmx512m -XX:MaxDirectMemorySize=256m
     depends_on:
       pulsar-cluster-zookeeper:
         condition: service_healthy
       pulsar-cluster-bookie:
         condition: service_started
-    ports:
-      - "6650:6650"  # Pulsar Broker 的二进制协议端口，用于客户端连接
-      - "8080:8080"  # Pulsar HTTP 管理 API 端口
+    # ports: 
+    #   # (端口默认不映射)
+    #   - "6650:6650"  # Pulsar Broker 的二进制协议端口，用于客户端连接
+    #   - "8080:8080"  # Pulsar HTTP 管理 API 端口
     command: bash -c "bin/apply-config-from-env.py conf/broker.conf && exec bin/pulsar broker"
   
 # -- 网络名称，用于容器间通信
 networks:
   pulsar-cluster:
     driver: bridge
-
-# -- 数据卷名称，用于持久化数据
-# volumes:
-#   pulsar_cluster_standalone_zookeeper_data:
-#   pulsar_cluster_standalone_bookkeeper_data:

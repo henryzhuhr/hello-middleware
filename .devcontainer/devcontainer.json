@@ -7,13 +7,13 @@
 	// The .devcontainer/docker-compose.yml file contains any overrides you need/want to make.
 	"dockerComposeFile": [
 		"../docker-compose.yml",
-		"../dockerfiles/docker-compose.es.yml", // middlesewares
-		"../dockerfiles/docker-compose.etcd.yml", // etcd
-		"../dockerfiles/docker-compose.milvus.yml", // milvus
-		"../dockerfiles/docker-compose.mongo.yml", // mongo
-		"../dockerfiles/docker-compose.mysql.yml", // mysql
+		// "../dockerfiles/docker-compose.es.yml", // middlesewares
+		// "../dockerfiles/docker-compose.etcd.yml", // etcd
+		// "../dockerfiles/docker-compose.milvus.yml", // milvus
+		// "../dockerfiles/docker-compose.mongo.yml", // mongo
+		// "../dockerfiles/docker-compose.mysql.yml", // mysql
 		"../dockerfiles/docker-compose.pulsar-cluster.yml", // pulsar-cluster-standalone
-		"../dockerfiles/docker-compose.redis.yml" // redis
+		// "../dockerfiles/docker-compose.redis.yml", // redis
 		
 	],
 
@@ -38,7 +38,8 @@
 	// "shutdownAction": "none",
 
 	// Uncomment the next line to run commands after the container is created.
-	"postCreateCommand": "cat /etc/os-release",
+	// "postCreateCommand": "cat /etc/os-release",
+	"postCreateCommand": "zsh scripts/init.sh",
 
 	// Configure tool-specific properties.
 	"customizations": {
