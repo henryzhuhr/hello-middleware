@@ -12,7 +12,7 @@
 		// "../dockerfiles/docker-compose.milvus.yml", // milvus
 		// "../dockerfiles/docker-compose.mongo.yml", // mongo
 		// "../dockerfiles/docker-compose.mysql.yml", // mysql
-		"../dockerfiles/docker-compose.pulsar-cluster.yml", // pulsar-cluster-standalone
+		// "../dockerfiles/docker-compose.pulsar-cluster.yml", // pulsar-cluster-standalone
 		// "../dockerfiles/docker-compose.redis.yml", // redis
 		
 	],
@@ -45,6 +45,34 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
+				// common
+				"Alibaba-Cloud.tongyi-lingma",
+				"Gruntfuggly.todo-tree",
+				"usernamehw.errorlens",
+				"tamasfe.even-better-toml",
+				// git
+				"mhutchie.git-graph",
+				// markdown
+				"yzhang.markdown-all-in-one",
+				"bierner.markdown-preview-github-styles",
+				"DavidAnson.vscode-markdownlint",
+				// shell
+				"timonwong.shellcheck",
+				"foxundermoon.shell-format",
+				// go
+				"golang.go",
+				"zsh.go-snippets",
+				"xiaoxin-technology.goctl",
+				"RobertOstermann.inline-parameters-extended",
+				"zxh404.vscode-proto3",
+				// python
+				"ms-python.python",
+				"ms-python.debugpy",
+				"ms-python.vscode-pylance",
+				"charliermarsh.ruff",
+				// lua
+				"sumneko.lua",
+				// others
 			]
 		}
 	}
