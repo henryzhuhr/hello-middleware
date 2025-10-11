@@ -1,60 +1,52 @@
 # 使用BUILDPLATFORM和TARGETPLATFORM进行多架构构建
-FROM --platform=$BUILDPLATFORM golang:1.24 AS golang-builder
+# FROM --platform=$BUILDPLATFORM golang:1.24 AS golang-builder
 
 # 设置目标平台环境变量
 ARG TARGETOS
 ARG TARGETARCH
 
-FROM ghcr.io/astral-sh/uv:0.7.13 AS uv-builder
+ARG GO_VERSION=1.23
+ARG UV_VERSION=0.8.8
+ARG NODE_IMAGETAG=24
+
+FROM golang:${GO_VERSION} AS golang-builder
+FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv-builder
+FROM node:${NODE_IMAGETAG} AS node-builder
 
 FROM ubuntu:24.04
 
 # ============================================================
-# 「基础」软件列表 BASE_INSTALL_LIST
-#        - ubuntu-desktop-minimal   桌面环境（会比较大）
-#        - ubuntu-server            服务器环境 (包含 openssh-server ?)
-#        - ca-certificates          证书
-#        - locales                  语言环境
-#        - zsh                      shell
+# 「必须」软件列表 MUST_INSTALL_LIST
 # ============================================================
-ARG BASE_INSTALL_LIST="ubuntu-server"
-ARG BASE_INSTALL_LIST="$BASE_INSTALL_LIST ca-certificates locales"
-ARG BASE_INSTALL_LIST="$BASE_INSTALL_LIST zsh"
+ARG MUST_INSTALL_LIST="ubuntu-server"
+ARG MUST_INSTALL_LIST="$MUST_INSTALL_LIST ca-certificates locales"
+ARG MUST_INSTALL_LIST="$MUST_INSTALL_LIST zsh"
 
 # ============================================================
-# 「扩展」软件列表 EXTENT_INSTALL_LIST
-#        - vim nano          编辑器 (ubuntu-server 包含 vi)
-#        - tree              目录树
-#        - pciutils          PCI 设备信息
-#        - iputils-ping      ping 命令
-#        - bash-completion   bash 补全 (zsh 取代了)
-#        - dotenv            环境变量管理
-#        - git               版本控制工具
-#        - openssh-client    SSH 客户端 (ubuntu-server 不包含，所以如果使用 git clone 需要安装)
+# 「可选」软件列表 OPTION_INSTALL_LIST
 # ============================================================
-ARG EXTENT_INSTALL_LIST=""
-ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST vim nano tree pciutils iputils-ping dnsutils"
-ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST git openssh-client"
-ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST build-essential"
-ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST cmake ninja-build clangd"
-ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST python3-dev"
-# ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST golang"
-ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST postgresql-client"
-ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST redis-tools"
-ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST mysql-client"
-ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST lua5.3"
+ARG OPTION_INSTALL_LIST=""
+ARG OPTION_INSTALL_LIST="$OPTION_INSTALL_LIST vim nano tree pciutils iputils-ping dnsutils"
+ARG OPTION_INSTALL_LIST="$OPTION_INSTALL_LIST git openssh-client"
+ARG OPTION_INSTALL_LIST="$OPTION_INSTALL_LIST build-essential"
+ARG OPTION_INSTALL_LIST="$OPTION_INSTALL_LIST cmake ninja-build clangd"
+ARG OPTION_INSTALL_LIST="$OPTION_INSTALL_LIST python3-dev"
+# ARG OPTION_INSTALL_LIST="$OPTION_INSTALL_LIST golang"
+ARG OPTION_INSTALL_LIST="$OPTION_INSTALL_LIST postgresql-client"
+ARG OPTION_INSTALL_LIST="$OPTION_INSTALL_LIST redis-tools"
+ARG OPTION_INSTALL_LIST="$OPTION_INSTALL_LIST mysql-client"
+ARG OPTION_INSTALL_LIST="$OPTION_INSTALL_LIST lua5.3"
 
 # 自定义镜像源
 # ARG MIRRORS_URL="mirrors.ustc.edu.cn"
-# ARG MIRRORS_URL="mirrors.tencentyun.com"
-ARG MIRRORS_URL="mirrors.cloud.tencent.com"
+ARG MIRRORS_URL="mirrors.tencentyun.com"
 
 # 是否清理 apt 缓存
 ARG CLEAN_APT_CACHE=0
 
 # 安装软件
 ENV DEBIAN_FRONTEND=noninteractive
-ENV INSTALL_LIST="$BASE_INSTALL_LIST $EXTENT_INSTALL_LIST"
+ENV INSTALL_LIST="$MUST_INSTALL_LIST $OPTION_INSTALL_LIST"
 # set -x 选项会使得每个命令在执行前都会被打印出来，报错时会显示是哪个命令出错
 RUN set -x && \
     sed -i 's/#force_color_prompt=yes/force_color_prompt=yes/g' ${HOME}/.bashrc && \

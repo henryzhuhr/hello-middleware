@@ -1,6 +1,6 @@
 services:
   # Redis
   redis-server:
-    image: redis:7 # https://hub.docker.com/_/redis
+    image: redis:8 # https://hub.docker.com/_/redis
     ports:
       - "6379:6379"
