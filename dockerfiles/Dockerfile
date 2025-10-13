@@ -1,3 +1,7 @@
+# FROM golang:1.18 AS golang-builder
+FROM golang:1.24 AS golang-builder
+FROM ghcr.io/astral-sh/uv:0.7.13 AS uv-builder
+
 FROM ubuntu:24.04
 
 # ============================================================
@@ -24,29 +28,35 @@ ARG BASE_INSTALL_LIST="$BASE_INSTALL_LIST zsh"
 #        - openssh-client    SSH 客户端 (ubuntu-server 不包含，所以如果使用 git clone 需要安装)
 # ============================================================
 ARG EXTENT_INSTALL_LIST=""
-ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST vim nano tree pciutils iputils-ping"
+ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST vim nano tree pciutils iputils-ping dnsutils"
 ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST git openssh-client"
-# ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST build-essential cmake ninja-build clangd"
-# ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST python3-pip python3-venv"
-ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST golang"
+ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST build-essential"
+ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST cmake ninja-build clangd"
+ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST python3-dev"
+# ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST golang"
 ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST postgresql-client"
+ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST redis-tools"
 ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST mysql-client"
+ARG EXTENT_INSTALL_LIST="$EXTENT_INSTALL_LIST lua5.3"
+
+
 
 # 自定义镜像源
-ARG MIRRORS_URL="mirrors.ustc.edu.cn"
+# ARG MIRRORS_URL="mirrors.ustc.edu.cn"
 # ARG MIRRORS_URL="mirrors.tencentyun.com"
-ENV DEBIAN_FRONTEND=noninteractive
+ARG MIRRORS_URL="mirrors.cloud.tencent.com"
+
 # 是否清理 apt 缓存
 ARG CLEAN_APT_CACHE=0
 
-
+# 安装软件
+ENV DEBIAN_FRONTEND=noninteractive
+ENV INSTALL_LIST="$BASE_INSTALL_LIST $EXTENT_INSTALL_LIST"
 # set -x 选项会使得每个命令在执行前都会被打印出来，报错时会显示是哪个命令出错
 RUN set -x && \
     sed -i 's/#force_color_prompt=yes/force_color_prompt=yes/g' ${HOME}/.bashrc && \
     sed -i -e "s#//.*archive.ubuntu.com#//${MIRRORS_URL}#g" -e "s#//ports.ubuntu.com#//${MIRRORS_URL}#g" /etc/apt/sources.list.d/ubuntu.sources && \
-    apt-get update && \
-    apt-get upgrade -y && \
-    INSTALL_LIST="$BASE_INSTALL_LIST $EXTENT_INSTALL_LIST" && \
+    apt-get update && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends ${INSTALL_LIST} && \
     apt-get autoremove -y && \
     if [ $CLEAN_APT_CACHE -ne 1 ]; then { apt-get clean all; rm -rf /var/lib/apt/lists/*; } fi && \
@@ -64,12 +74,16 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 # 设置 zsh 为默认 shell
 RUN set -x && \
     chsh -s /usr/bin/zsh && \
-    git clone https://mirrors.tuna.tsinghua.edu.cn/git/ohmyzsh.git --depth 1 && \
-    cd ohmyzsh/tools && \
-    REMOTE=https://mirrors.tuna.tsinghua.edu.cn/git/ohmyzsh.git sh install.sh && \
-    # git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-/root/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && \
-    # 使用 gitee 同步仓库
-    git clone https://gitee.com/henryzhuhr/zsh-autosuggestions.git ${ZSH_CUSTOM:-/root/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && \
+    # ====== install oh-my-zsh (official) ======
+    git clone https://github.com/ohmyzsh/ohmyzsh.git --depth 1 /tmp/ohmyzsh && cd /tmp/ohmyzsh/tools && \
+    sh install.sh && rm -rf /tmp/ohmyzsh && \
+    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-/root/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && \
+    # ====== install oh-my-zsh (mirror) ======
+    # git clone http://mirrors.tuna.tsinghua.edu.cn/git/ohmyzsh.git --depth 1 && cd ohmyzsh/tools && \
+    # REMOTE=https://mirrors.tuna.tsinghua.edu.cn/git/ohmyzsh.git sh install.sh && \
+    # git clone https://gitee.com/henryzhuhr/zsh-autosuggestions.git --depth 1 ${ZSH_CUSTOM:-/root/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && \
+    # ==============================
+    # set zsh theme and plugins
     echo "ZSH_THEME='candy'" >> ~/.zshrc && \
     echo "plugins=(macos dotenv git cp python bundler rake rbenv ruby zsh-autosuggestions)" >> ~/.zshrc && \
     echo "ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#00BFFF,bg=gray,bold,underline'" >> ~/.zshrc && \
@@ -82,7 +96,8 @@ RUN set -x && \
     echo "alias mkdir='mkdir -p'" >> ~/.zshrc && \
     echo "alias grep='grep --color=auto'" >> ~/.zshrc && \
     echo "alias egrep='egrep --color=auto'" >> ~/.zshrc && \
-    echo "alias fgrep='fgrep --color=auto'" >> ~/.zshrc
+    echo "alias fgrep='fgrep --color=auto'" >> ~/.zshrc && \
+    rm -rf /tmp/*
 
 ARG USER_NAME="root"
 ARG USER_HOME="/${USER_NAME}"
@@ -95,17 +110,10 @@ ARG USER_HOME="/${USER_NAME}"
 # ============================================================
 #   Golang 环境
 # ============================================================
-# RUN set -x && \
-#     go env -w GO111MODULE=on && \
-#     go env -w GOPROXY=https://goproxy.cn,direct && \
-#     go install golang.org/x/tools/gopls@latest && \
-#     go install github.com/cweill/gotests/...@latest && \
-#     go install github.com/fatih/gomodifytags@latest && \
-#     go install github.com/josharian/impl@latest && \
-#     go install github.com/haya14busa/goplay/cmd/goplay@latest && \
-#     go install github.com/go-delve/delve/cmd/dlv@latest && \
-#     go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-
+COPY --from=golang-builder /usr/local/go /usr/local/go
+ENV PATH="/usr/local/go/bin:$PATH"
+ENV PATH="$USER_HOME/go/bin:$PATH"
+RUN echo ": $(date +%s):0;go mod tidy" >> $USER_HOME/.zsh_history
 
 # ============================================================
 #   Python 环境
@@ -114,7 +122,7 @@ ARG USER_HOME="/${USER_NAME}"
 # # https://www.adamsdesk.com/posts/resolve-pip-externally-managed-environment
 # # 临时解决方案  --ignoreExternallyManagedEnvironment
 # 使用 uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+COPY --from=uv-builder /uv /uvx /bin/
 
 # 默认使用系统 Python 环境
 ENV UV_SYSTEM=true 
@@ -126,23 +134,21 @@ ENV UV_DEFAULT_INDEX="https://mirrors.cloud.tencent.com/pypi/simple/"
 RUN set -x && \
     uv venv $VIRTUAL_ENV && \
     echo "source ${VIRTUAL_ENV}/bin/activate" >> $USER_HOME/.zshrc && \
-    VENV_PYTHON=${VIRTUAL_ENV}/bin/python3 && \
-    # [ -f $USER_HOME/tmp/pyproject.toml ] && uv sync --active --directory $USER_HOME/tmp || \
-    # ([ -f $USER_HOME/tmp/requirements.txt ] && uv add --active -r ${USER_HOME}/tmp/requirements.txt) && \
-    # if [ -f "$USER_HOME/tmp/pyproject.toml" ]; then \
-    #     uv sync --active --directory $USER_HOME/tmp; \
-    # elif [ -f "$USER_HOME/tmp/requirements.txt" ]; then \
-    #     uv add --active -r $USER_HOME/tmp/requirements.txt; \
-    # fi && \
     rm -rf $(uv cache dir) && \
     rm -rf $USER_HOME/tmp && \
     # 在 uv 没有支持全局变量前，临时加入 history 文件
     echo ": $(date +%s):0;uv add  --active" >> $USER_HOME/.zsh_history && \
     echo ": $(date +%s):0;uv run  --active" >> $USER_HOME/.zsh_history && \
     echo ": $(date +%s):0;uv sync --active" >> $USER_HOME/.zsh_history && \
-    echo "finished"
-    
+    echo "finished" && \
+    rm -rf /tmp/*
+
+# 环境初始化脚本，加快构建镜像的速度
+RUN echo ": $(date +%s):0;zsh scripts/init.sh" >> $USER_HOME/.zsh_history
 
 # 提升虚拟环境 python 的优先级
 ENV PATH=${VIRTUAL_ENV}/bin:$PATH
 ENV VIRTUAL_ENV_DISABLE_PROMPT=1
+
+ADD scripts/init.sh /root/scripts/init.sh
+
