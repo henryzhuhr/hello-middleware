@@ -1,10 +1,10 @@
 #!/bin/bash
 # 预先构建项目镜像的脚本，加快 docker compose up 的速度
 
-IMAGE_TAG=1.0.0
+IMAGE_TAG=1.0.2
 
 GO_VERSION=1.24.6
-UV_VERSION=0.8.15
+UV_VERSION=latest
 NODE_IMAGETAG=24
 MIRRORS_URL="mirrors.ustc.edu.cn"
 # MIRRORS_URL="mirrors.tencentyun.com"

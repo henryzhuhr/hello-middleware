@@ -2,6 +2,8 @@ services:
   # Redis
   redis-server:
     image: redis:8 # https://hub.docker.com/_/redis
+    networks:
+      - default
     ports:
       - "6379:6379"
     restart: always

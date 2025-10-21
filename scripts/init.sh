@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Init Python environment
-uv sync --active
+uv sync
 
 # Install Go tools
 export GOPROXY=https://goproxy.cn,direct

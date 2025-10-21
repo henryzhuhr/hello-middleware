@@ -1,0 +1,72 @@
+syntax = "v1"
+
+type (
+	// SKU（Stock Keeping Unit，库存量单位）是电商和零售行业中最核心的概念之一，用于唯一标识一个可销售的商品具体规格组合。
+	ProductSKU {
+		Specs   map[string]string `json:"specs"` // 规格组合，如 {"颜色": "红色", "尺寸": "L"}
+		Price   float64           `json:"price"` // 该 SKU 价格（可覆盖商品级价格）
+		Stock   uint              `json:"stock"` // 该 SKU 库存
+		SKUCode string            `json:"skuCode"` // 商家自定义 SKU 编码（可选）
+	}
+)
+
+type (
+	// 创建商品响应
+	AddProductResp {
+		Id uint `json:"id"`
+	}
+	// 商品基础信息（用于创建）
+	AddProductReq {
+		Name        string            `json:"name"` // 商品名称（必填）
+		Description string            `json:"description"` // 商品详情（富文本或 Markdown）
+		CategoryId  uint              `json:"categoryId"` // 类目 ID（如“女装 > 连衣裙”）
+		Brand       string            `json:"brand"` // 品牌（可选）
+		Price       float64           `json:"price"` // 原价（单位：元，建议用分存储，但 API 用元更友好）
+		SalePrice   *float64          `json:"salePrice,optional"` // 促销价（可选，若为空则按原价卖）
+		Attributes  map[string]string `json:"attributes"` // 自定义属性，如 {"材质": "纯棉", "适用季节": "夏季"}
+		SKUs        []ProductSKU      `json:"skus"` // SKU 列表（支持多规格）
+	}
+	// 获取商品请求
+	GetProductReq {
+		Id uint `path:"id"`
+	}
+	// 获取商品响应（完整商品信息）
+	GetProductResp {
+		Id          uint              `json:"id"`
+		Name        string            `json:"name"` // 商品名称（必填）
+		Description string            `json:"description"` // 商品详情（富文本或 Markdown）
+		CategoryId  uint              `json:"categoryId"` // 类目 ID（如“女装 > 连衣裙”）
+		Brand       string            `json:"brand"` // 品牌（可选）
+		Price       float64           `json:"price"` // 原价（单位：元，建议用分存储，但 API 用元更友好）
+		SalePrice   *float64          `json:"salePrice,omitempty"` // 促销价（可选，若为空则按原价卖）
+		Attributes  map[string]string `json:"attributes"` // 自定义属性，如 {"材质": "纯棉", "适用季节": "夏季"}
+		SKUs        []ProductSKU      `json:"skus"` // SKU 列表（支持多规格）
+		Status      string            `json:"status"` // 商品状态：active, inactive, pending, deleted
+		TotalStock  uint              `json:"totalStock"` // 所有 SKU 库存之和（便于前端展示）
+	}
+
+	// 删除商品请求
+	DeleteProductReq {
+		Id uint `path:"id"`
+	}
+	// 删除商品响应
+	DeleteProductResp {
+		Success bool `json:"success"`
+	}
+)
+
+@server (
+	group:  product
+	prefix: /v1
+)
+service product {
+	@handler AddProduct
+	post /product (AddProductReq) returns (AddProductResp)
+
+	@handler GetProduct
+	get /product/:id (GetProductReq) returns (GetProductResp)
+
+	@handler DeleteProduct
+	delete /product/:id (DeleteProductReq) returns (DeleteProductResp)
+}
+

@@ -3,18 +3,19 @@ services:
   mysql-server:
     image: mysql:9 # https://hub.docker.com/_/mysql
     restart: always
+    networks:
+      - default
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret_password}
       MYSQL_DATABASE: default_db
-      MYSQL_USER: myuser
-      MYSQL_PASSWORD: my_secret_password
+      # MYSQL_USER: root # 不允许 root 用户名
+      MYSQL_PASSWORD: root_secret_password
       TZ: Asia/Shanghai # 设置时区
     ports:
       - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
-      # - ./sql/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql  # 初始化数据库脚本
-      # - ./sql/mysql/sql:/opt/sql  # 初始化数据库脚本
+      # 初始化数据库脚本
+      # 重要：脚本只在数据目录为空时运行一次！ 如果你已经有一个持久化的数据卷，那么即使你更新了脚本，再次启动容器也不会重新执行这些初始化脚本。
+      # 删除容器及其关联的数据卷: docker-compose down -v
+      - ./sql/mysql:/docker-entrypoint-initdb.d  # 初始化数据库脚本
 
-volumes:
-  mysql_data:

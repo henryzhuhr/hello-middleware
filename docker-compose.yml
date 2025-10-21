@@ -1,6 +1,6 @@
 services:
   hello-middleware:
-    image: hello-middleware:1.0.0  # 构建后镜像的名称和标签
+    image: hello-middleware:1.0.2  # 构建后镜像的名称和标签
     # build:  # recommended to use `scripts/docker-pre-build.sh` to build the image
     #   context: .
     #   dockerfile: dockerfiles/Dockerfile

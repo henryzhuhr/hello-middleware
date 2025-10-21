@@ -1,1 +1,0 @@
-source /opt/sql/user.sql;

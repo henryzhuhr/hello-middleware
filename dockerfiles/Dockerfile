@@ -38,7 +38,6 @@ ARG OPTION_INSTALL_LIST="$OPTION_INSTALL_LIST mysql-client"
 ARG OPTION_INSTALL_LIST="$OPTION_INSTALL_LIST lua5.3"
 
 # 自定义镜像源
-# ARG MIRRORS_URL="mirrors.ustc.edu.cn"
 ARG MIRRORS_URL="mirrors.tencentyun.com"
 
 # 是否清理 apt 缓存
@@ -65,7 +64,7 @@ ENV LANG=zh_CN.utf8
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
 # 启用 bash 补全
-# RUN sed -i.bak '/^#if ! shopt -oq posix; then$/,/^#fi$/s/^#//' /etc/bash.bashrc
+RUN sed -i.bak '/^#if ! shopt -oq posix; then$/,/^#fi$/s/^#//' /etc/bash.bashrc
 
 # 设置 zsh 为默认 shell
 RUN set -x && \
@@ -110,7 +109,7 @@ ARG TARGETOS
 ARG TARGETARCH
 COPY --from=golang-builder /usr/local/go /usr/local/go
 ENV PATH="/usr/local/go/bin:$PATH"
-ENV PATH="$USER_HOME/go/bin:$PATH"
+ENV PATH="${USER_HOME}/go/bin:$PATH"
 ENV GOOS=$TARGETOS
 ENV GOARCH=$TARGETARCH
 
@@ -124,30 +123,14 @@ ENV GOARCH=$TARGETARCH
 COPY --from=uv-builder /uv /uvx /bin/
 
 # 默认使用系统 Python 环境
-ENV UV_SYSTEM=true 
-ENV VIRTUAL_ENV=$USER_HOME/.venv
+ENV UV_SYSTEM=true
 
-ADD . $USER_HOME/tmp
 ENV UV_DEFAULT_INDEX="https://mirrors.cloud.tencent.com/pypi/simple/"
-# ENV UV_INDEX="https://mirrors.ustc.edu.cn/pypi/simple"
-RUN set -x && \
-    uv venv $VIRTUAL_ENV && \
-    echo "source ${VIRTUAL_ENV}/bin/activate" >> $USER_HOME/.zshrc && \
-    rm -rf $(uv cache dir) && \
-    rm -rf $USER_HOME/tmp && \
-    # 在 uv 没有支持全局变量前，临时加入 history 文件
-    echo ": $(date +%s):0;uv add  --active" >> $USER_HOME/.zsh_history && \
-    echo ": $(date +%s):0;uv run  --active" >> $USER_HOME/.zsh_history && \
-    echo ": $(date +%s):0;uv sync --active" >> $USER_HOME/.zsh_history && \
-    echo "finished" && \
-    rm -rf /tmp/*
 
 # 环境初始化脚本，加快构建镜像的速度
 RUN echo ": $(date +%s):0;zsh scripts/init.sh" >> $USER_HOME/.zsh_history
 
 # 提升虚拟环境 python 的优先级
-ENV PATH=${VIRTUAL_ENV}/bin:$PATH
+# ENV PATH=${VIRTUAL_ENV}/bin:$PATH
 ENV VIRTUAL_ENV_DISABLE_PROMPT=1
-
-ADD scripts/init.sh /root/scripts/init.sh
 
