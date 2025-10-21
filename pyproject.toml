@@ -14,7 +14,8 @@ dependencies = [
     # "protobuf==3.20",
     # "pymilvus==2.5.4",
     "pyyaml>=6.0.2", # milvus: 建议安装与所安装 Milvus 服务器版本相匹配的 PyMilvus 版本。更多信息，请参阅[发行说明](https://milvus.io/docs/zh/release_notes.md)。
-    # "redis>=5.2.1",
+    "redis>=5.2.1",
+    "requests>=2.32.5",
     "uvicorn>=0.34.0",
 ]
 

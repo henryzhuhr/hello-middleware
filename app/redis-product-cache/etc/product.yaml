@@ -1,0 +1,16 @@
+Name: product
+Host: 0.0.0.0
+Port: 8888
+
+Log:
+  Stat: false # Stat represents whether to log statistics, default is `true`.
+  Encoding: plain
+
+Mysql:
+  DataSource: root:root_secret_password@tcp(mysql-server:3306)/default_db?charset=utf8mb4&parseTime=True&loc=Local
+  
+Redis:
+  Host: redis-server
+  Port: 6379
+  Password: #
+  DB: 0
